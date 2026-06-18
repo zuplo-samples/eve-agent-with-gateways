@@ -31,12 +31,27 @@ if (!stream.ok || !stream.body) {
   process.exit(1);
 }
 
-// Pull text out of whatever shape the event carries.
+// Pull text out of whatever shape the event carries. eve sends `message` as a
+// plain string on message.completed; keep the object/array fallbacks too.
 function textOf(d: Record<string, unknown>): string {
-  const c = (d.message as { content?: unknown })?.content ?? d.content ?? d.text ?? d.delta;
+  const m = d.message;
+  if (typeof m === "string") return m;
+  const c = (m as { content?: unknown })?.content ?? d.content ?? d.text ?? d.delta;
   if (typeof c === "string") return c;
   if (Array.isArray(c)) return c.map((x) => (typeof x === "string" ? x : ((x as { text?: string })?.text ?? ""))).join("");
   return "";
+}
+
+// A real tool failure, not a benign `error: null` / `isError: false` field.
+function isErr(out: unknown): boolean {
+  if (out == null) return false;
+  if (typeof out === "string") return /^Error:/i.test(out);
+  if (Array.isArray(out)) return out.some(isErr);
+  if (typeof out === "object") {
+    const o = out as { isError?: unknown; error?: unknown };
+    return o.isError === true || (typeof o.error === "string" && o.error.length > 0);
+  }
+  return false;
 }
 
 let buf = "";
@@ -57,12 +72,20 @@ for await (const chunk of stream.body as AsyncIterable<Uint8Array>) {
     const type = ev.type ?? ev.event ?? "";
     const d = ev.data ?? {};
 
-    if (type === "actions.requested" || type === "action.result") {
-      const name = (d.name ?? d.tool ?? "") as string;
-      if (name) console.log(`  · ${type === "actions.requested" ? "calling" : "result "} ${name}`);
+    if (type === "actions.requested") {
+      for (const a of (d.actions as Array<{ toolName?: string }>) ?? []) {
+        if (a.toolName) console.log(`  · calling ${a.toolName}`);
+      }
+    } else if (type === "action.result") {
+      const r = d.result as { toolName?: string; output?: unknown } | undefined;
+      console.log(`  · result  ${r?.toolName ?? "?"}${isErr(r?.output) ? " (error)" : ""}`);
     } else if (type === "message.completed") {
-      const text = textOf(d);
-      if (text) console.log(`\n=== weekly summary ===\n${text}\n`);
+      const text = textOf(d).trim();
+      if (!text) continue;
+      // finishReason "stop" is the model's final answer; anything else is an
+      // intermediate note between tool calls.
+      if (d.finishReason === "stop") console.log(`\n=== weekly summary ===\n${text}\n`);
+      else console.log(`  · ${text}`);
     } else if (type === "session.completed") {
       process.exit(0);
     } else if (type === "turn.failed" || type === "session.failed") {

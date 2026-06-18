@@ -20,5 +20,8 @@
     "ai": "7.0.0-beta.178",
     "eve": "latest",
     "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "microsandbox": "^0.5.7"
   }
 }

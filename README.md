@@ -58,7 +58,7 @@ agent/
     oauth.ts            # ~60-line refresh_token grant + RFC 8414 discovery, no deps
     token-store.ts      # persists the bootstrapped client_id + refresh token
   schedules/
-    weekly-metrics.md   # cron: pull last-7-days metrics, summarize across channels
+    weekly-metrics.md   # cron: summarize last-7-days posting activity across channels
 scripts/
   bootstrap.ts          # one-time: sign in once, capture a refresh token
   digest.ts             # demo: fire the weekly schedule now and stream the summary
@@ -111,12 +111,16 @@ curl -X POST http://127.0.0.1:3000/eve/v1/session \
 
 It refreshes a token silently and acts — no browser after the bootstrap.
 
-## Weekly metrics digest (the unattended job)
+## Weekly activity digest (the unattended job)
 
 `agent/schedules/weekly-metrics.md` is what makes the agent actually run on its
 own. Its `cron` (`0 9 * * 1` — Mondays 09:00 UTC) fires the agent in task mode
-to pull the last 7 days of metrics for every Buffer channel and combine them
-into one cross-channel summary. No message, no human — just the cron.
+to pull the last 7 days of posts for every Buffer channel and combine them into
+one cross-channel activity summary. No message, no human — just the cron.
+
+> Performance metrics (`get_aggregated_post_metrics`) need Buffer's
+> `insights:read` scope, which isn't granted here, so the digest summarizes
+> posting **activity** from `list_posts` instead.
 
 `eve dev` never fires cron on cadence, so to demo it off-schedule, run the
 schedule now and stream its summary to your terminal:

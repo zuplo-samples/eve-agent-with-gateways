@@ -95,5 +95,4 @@ if (!tokens.refresh_token) {
 }
 
 await storeGrant(clientId, tokens.refresh_token);
-console.log("\nBootstrapped. Stored client_id + refresh token in .eve/oauth-store.json.");
-console.log("The agent now runs headless — start it with `npm run dev`.\n");
+console.log("\nBootstrapped. The agent now runs headless — start it with `npm run dev`.\n");
