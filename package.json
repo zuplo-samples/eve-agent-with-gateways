@@ -1,0 +1,24 @@
+{
+  "name": "eve-mcp-gateway-demo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A headless Vercel Eve agent that reaches Buffer through a Zuplo MCP Gateway route. A one-time OAuth bootstrap captures a refresh token; the agent runs unattended, refreshing silently.",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "bootstrap": "node --env-file=.env scripts/bootstrap.ts",
+    "digest": "node scripts/digest.ts",
+    "dev": "eve dev --port 3000",
+    "build": "eve build",
+    "start": "eve start",
+    "info": "eve info"
+  },
+  "dependencies": {
+    "@ai-sdk/openai-compatible": "^3.0.0-beta.57",
+    "ai": "7.0.0-beta.178",
+    "eve": "latest",
+    "zod": "^3.25.76"
+  }
+}
