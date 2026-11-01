@@ -19,7 +19,7 @@
     "@ai-sdk/openai-compatible": "^3.0.0-beta.57",
     "ai": "7.0.0-beta.178",
     "eve": "latest",
-    "zod": "^3.25.76"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "microsandbox": "^0.5.7"
